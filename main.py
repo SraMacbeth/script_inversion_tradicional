@@ -83,6 +83,14 @@ df["Rendimiento_Estrategia"] = df["Rendimiento_Diario"] * df["Posicion"]
 # Se utiliza la fórmula del interés compuesto, multiplicando los 
 # rendimientos uno sobre otro.
 df["Rendimiento_Acumulado"] = (df["Rendimiento_Estrategia"]  + 1).cumprod()
+
+# Cálculo del rendimiento con la estrategia Buy and Hold. 
+# Se calcula comprando acciones el primer dia, manteniendose con ella a lo largo del tiempo, sin volver a comprar ni vender
+# Se utiliza la fórmula del interés compuesto, multiplicando los 
+# rendimientos diarios uno sobre otro.
+df["Rendimiento_Diario_Acumulado"] = (df["Rendimiento_Diario"]  + 1).cumprod()
+
+
 #print(df)
 # Primeras 5 filas del dataframe
 print(df.head())
