@@ -2,6 +2,11 @@ import yfinance
 import pandas
 import numpy as np
 
+# Configuración de Pandas para la visualización en la terminal
+# 'display.max_columns' -> define el límite máximo de columnas a mostrar. 
+# Al usar None, se elimina el límite para ver la tabla completa sin recortes (...).
+pandas.set_option('display.max_columns', None)
+
 # —------------ BACKTESTING-----------------------------------------------
 
 # Conexión a internet y descarga de datos históricos reales
@@ -12,12 +17,8 @@ def download_dataframe(ticker, initial_date, final_date):
     return dataframe
 
 df = download_dataframe("TSLA", "2000-01-01", "2026-05-17")
-#print(df)
 
 # Limpieza y estructuración de los datos en un DataFrame con índice de fechas
-
-# Primeras 5 filas del dataframe
-#print(df.head())
 
 # Tipos de datos de la columnas y, si hay, valores nulos
 #print(df.info())
@@ -26,7 +27,7 @@ df = download_dataframe("TSLA", "2000-01-01", "2026-05-17")
 #print(df.index)
 
 # Cálculo de las variaciones de precio diarias
-# Nueva columna que calcula la variacion del precio de cierre de cada dia
+# Nueva columna que calcula la variación del precio de cierre de cada dia
 df['Rendimiento_Diario'] = df['Close'].pct_change()
 
 '''
@@ -61,14 +62,28 @@ df["Media_Larga"] = df["Close"].rolling(window=50).mean()
 df["Posicion"] = np.where(df["Media_Corta"] > df["Media_Larga"], 1 , 0) 
 
 # Se encuentran los días exactos donde hay que comprar o vender
-# Se crea la columna Signal (Señal) que indicará al usuario si es momentos d comprar, vender o esperar.Se calcula comparando la posicion del día actual con el día anterior. 
+# Se crea la columna Signal (Señal) que indicará al usuario si es momento de comprar, vender o esperar.Se calcula comparando la posicion del día actual con el día anterior. 
 # Usa la formula posicion_actual - posicion_anterior = señal
-# Puede tomar 3 valores, según los resultados de la ecuación
+# Puede tomar 3 valores, según los resultados de la ecuación:
 # 1 - 0 = 1 (hoy long - ayer neutral = Comprar!)
-# 1 - 1 = 0 (hoy long - ayer long = Ya esta comprado. Esperar.)
+# 1 - 1 = 0 (hoy long - ayer long = Ya está comprado. Esperar.)
 # 0 - 1 = -1 (hoy nuetral - ayer long = la tendencia se rompió. Vender!)
 df['Signal'] = df['Posicion'].diff()
 
+
+# Cálculo del rendimiento de la estrategia (pérdidas y ganancias)
+# Se calcula multiplicando el rendimiento diario por la posición.
+# Si el rendimiento diario es positivo y la posicion es Long, hay ganancia.
+# Si el rendimiento diario es negativo y la posicion es Long, hay pérdida.
+# Si la posicion es de Espera, el dinero no hay pérdida ni ganancia 
+# (independientemente del rendimieto diario)
+df["Rendimiento_Estrategia"] = df["Rendimiento_Diario"] * df["Posicion"]
+
+# Cálculo del rendimiento acumulado
+# Se utiliza la fórmula del interés compuesto, multiplicando los 
+# rendimientos uno sobre otro.
+df["Rendimiento_Acumulado"] = (df["Rendimiento_Estrategia"]  + 1).cumprod()
+#print(df)
 # Primeras 5 filas del dataframe
 print(df.head())
 # Ultimas 5 filas del dataframe
